@@ -1,6 +1,6 @@
 # Day 11 https://adventofcode.com/2024/day/11
 import itertools as it
-
+from tqdm import trange
 # Read the initial set of stones
 with open("day11/input.txt") as f:
 	initial_stones = f.read().strip().split()
@@ -31,8 +31,7 @@ def blink(stones:list[str]) -> list[str]:
 
 
 num_blinks = 25
-for _ in range(num_blinks):
+for _ in trange(num_blinks):
 	initial_stones = blink(initial_stones)
-	# print(initial_stones)
 
 print(f'{len(initial_stones)}')
