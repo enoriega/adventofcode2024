@@ -1,6 +1,7 @@
 # Day 12 https://adventofcode.com/2024/day/12
 
-from collections import deque
+import itertools as it
+from collections import deque, defaultdict
 from tqdm import tqdm
 
 # Read the grid:
@@ -24,7 +25,7 @@ for a in range(m):
 	for b in range(n):
 		if (a, b) not in seen:
 			# pseeds.update()
-			region = []
+			region = set()
 			# Do a BFS and just consider the neighbors of the same type
 			queue = deque([(a, b)])
 			# pbfs = tqdm(desc="BFS", leave=False)
@@ -32,7 +33,7 @@ for a in range(m):
 				# pbfs.update()
 				i, j = queue.popleft()
 				if (i, j) not in seen:
-					region.append((i, j))
+					region.add((i, j))
 					seen.add((i, j))
 					for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
 						x, y = i+di, j+dj
@@ -44,22 +45,45 @@ for a in range(m):
 			# Add the region to the list
 			regions.append(region)
 
+def count_corners(region:set[tuple[int, int]]) -> dict[tuple[int, int], str]:
+	ret = 0
+
+	for i, j in region:
+		top = i - 1, j
+		bottom = i + 1, j
+		left = i, j - 1
+		right = i, j + 1
+
+		if top not in region and left not in region:
+			ret += 1
+		if top not in region and right not in region:
+			ret += 1
+		if bottom not in region and left not in region:
+			ret += 1
+		if bottom not in region and right not in region:
+			ret += 1
+
+		if bottom in region and right in region and (bottom[0], bottom[1]+1) not in region:
+			ret += 1
+		if bottom in region and left in region and (bottom[0], bottom[1]-1) not in region:
+			ret += 1
+		if top in region and right in region and (top[0], top[1]+1) not in region:
+			ret += 1
+		if top in region and left in region and (top[0], top[1]-1) not in region:
+			ret += 1
+
+	return ret
+
 # Compute the price
 total_price = 0
 for region in regions:
-	perimeter = 0
-	area = 0
-	for i, j in region:
-		area += 1
-		for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-			x, y = i+di, j+dj
-			# Check for bounds and that we haven't visited it before
-			if 0 <= x < m and 0 <= y < n:
-				if grid[x][y] != grid[i][j]:
-					perimeter += 1
-			else:
-				perimeter += 1
-	total_price += area * perimeter
+	area = len(region)
+
+	# The number or sides if the number of corners
+	sides = count_corners(region)
+
+	# print(f"{[grid[i][j] for i, j in region]} - A: {area} - S: {sides}")
+	total_price += area * sides
 print(total_price)
 	
 
