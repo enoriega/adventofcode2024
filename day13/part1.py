@@ -3,6 +3,7 @@
 import re
 import itertools as it
 from typing import NamedTuple, Optional
+from tqdm import tqdm
 
 
 class Problem(NamedTuple):
@@ -79,7 +80,7 @@ def solve(position:tuple[int, int], p:Problem, remaining_a:int, remaining_b:int)
 max_steps = 100
 # Aggregate solutions
 total_tokens = 0
-for problem in problems:
+for problem in tqdm(problems):
 	solution = solve((0, 0), problem, max_steps, max_steps)
 	if solution:
 		total_tokens += solution
