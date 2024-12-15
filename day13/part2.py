@@ -1,9 +1,7 @@
 # Day 13 https://adventofcode.com/2024/day/13
 
 import re
-import heapq
 import itertools as it
-from collections import defaultdict
 from typing import NamedTuple, Optional
 from tqdm import tqdm
 
