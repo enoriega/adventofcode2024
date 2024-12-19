@@ -10,3 +10,5 @@ wheels/
 .venv
 .vscode/launch.json
 */input.txt
+decom
+day17/decompilation.txt
