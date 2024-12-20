@@ -1,7 +1,6 @@
 # Day 20 - https://adventofcode.com/2024/day/20
 
-from collections import deque
-
+from collections import deque, Counter
 
 # Dimensions of the map
 n, m = 0, 0
@@ -35,8 +34,6 @@ def print_map(path={}):
 				print(".", end='')
 		print()
 
-# print_map()
-
 def neighbors(i, j, dist=1):
 	for di, dj in ((0, dist), (dist, 0), (0, -dist), (-dist, 0)):
 		x = i + di
@@ -58,19 +55,31 @@ while curr != end:
 			path.append(neighbor)
 			curr = neighbor
 
-# print()
-# print_map(path)
-
-# For each element in the path, see if we can jump a wall
+# Find all cells in the path within a manhattan distance of 20
 num_cheats = 0
 elems = set(path)
 while path:
 	curr = path.popleft()
-	for candidate in neighbors(*curr, dist=2):
+	elems.remove(curr)
+	candidates = []
+	for i in range(-20, 21):
+		for j in range(-20, 21):
+			if (i, j) != (0, 0):
+				candidates.append((curr[0]+i, curr[1]+j))
+
+	# Verify if there is a fesible cheat
+	for candidate in candidates:
+		# Only consider the candidate if it is part of the path
 		if candidate in elems:
-			# If the difference in distances is greater than two
-			# then this is a feasible cheat
-			if distances[candidate] - distances[curr] > 100:
-				num_cheats += 1
+			# How far is the candidate from the current cell if were to cheat
+			cheat_distance = abs(curr[0]-candidate[0]) + abs(curr[1]-candidate[1])
+			# How far is the candidate if we follow the path
+			normal_distance = distances[candidate] - distances[curr]
+			# What is the net distance savings
+			savings = normal_distance-cheat_distance
+			# If there are net savings and the cheat is no more than 20 blocks away
+			if cheat_distance <= 20 and savings:
+				if savings >= 100:
+					num_cheats += 1
 
 print(num_cheats)
