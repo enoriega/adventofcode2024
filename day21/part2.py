@@ -89,7 +89,7 @@ class KeyPad:
 			np.append('A')
 			path.extend(np)
 
-		return [path]
+		return path
 	
 
 	@lru_cache()
@@ -167,21 +167,58 @@ nums = "789\n456\n123\n 0A"
 numpad = KeyPad(keys=nums, scorer=dirpad)
 	
 
-def optimize(code, steps):
-	ret = code
-	for step in range(steps):
-		if step == 0:
-			ret = numpad.encode(ret)[0]
-		else:
-			ret = dirpad.encode(ret)[0]
+# def optimize(code, steps):
+# 	ret = code
+# 	for step in range(steps):
+# 		if step == 0:
+# 			ret = numpad.encode(ret)
+# 		else:
+# 			ret = dirpad.encode(ret)
 
-	return len(ret)
+# 	return len(ret)
+
+def optimize(code, steps):
+	seq = numpad.encode(code)
+	seq = efficient(seq, steps-1)
+	return len(seq)
+
+mem = {}
+def efficient(seq, steps):
+	# for _ in range(steps):
+	# 	seq = dirpad.encode(seq)
+	# return seq
+	key = ''.join(seq), steps
+	if key in mem:
+		return mem[key]
+	
+	if steps == 0:
+		ret = seq
+	else:
+		# Split the sequence in blocks that end in A
+		blocks = []
+		block = []
+		for c in seq:
+			block.append(c)
+			if c == 'A':
+				blocks.append(block)
+				block = []
+		if block:
+			blocks.append(block)
+
+		# Recursive call
+		ret = []
+		for block in blocks:
+			encoded = dirpad.encode(block)
+			ret.extend(efficient(encoded, steps-1))
+
+	mem[key] = ret
+	return ret
 
 
 score = 0
 sequences = []
 for code in tqdm(codes):
-	l = optimize(code, steps=3)
+	l = optimize(code, steps=26)
 	num = int(code[:-1])
 	score += l*num
 	sequences.append(l)
@@ -189,5 +226,6 @@ for code in tqdm(codes):
 
 for code, sequence in zip(codes, sequences):
 	print(f"{code}: {sequence}")
+print(score)
 
 	
