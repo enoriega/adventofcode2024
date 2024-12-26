@@ -45,9 +45,12 @@ class KeyPad:
 				if chosen:
 					segs.append(chosen)
 
+		for s, dsts in self._segments.items():
+			for d, segs in dsts.items():
+				if segs:
+					self._segments[s][d] = segs[0]
 
-		# # Memoization
-		# self._mem = {}
+		x = 0
 	
 	def decode(self, input:str) -> str:
 		""" Decodes a series of steps and
@@ -81,10 +84,7 @@ class KeyPad:
 			else:
 				src = input[jx-1]
 
-			segments = self._segments[src][input[jx]]
-			if not segments:
-				segments.append([])
-			segment = segments[0]
+			segment = self._segments[src][input[jx]]
 			np = list(segment)
 			np.append('A')
 			path.extend(np)
@@ -156,7 +156,8 @@ class KeyPad:
 
 	def count_moves(self, seq:str) -> int:
 		""" Computes the total number of moves """
-		seq = ['A'] + list(seq)
+		seq = list(seq)
+		seq.append('A')
 		return sum(self._distances[s][d] for s, d in zip(seq, seq[1:]))
 
 arrows = " ^A\n<v>"
@@ -164,14 +165,11 @@ dirpad = KeyPad(keys=arrows)
 
 nums = "789\n456\n123\n 0A"
 numpad = KeyPad(keys=nums, scorer=dirpad)
-
-
 	
 
 def optimize(code, steps):
 	ret = code
 	for step in range(steps):
-
 		if step == 0:
 			ret = numpad.encode(ret)[0]
 		else:
@@ -189,15 +187,7 @@ for code in tqdm(codes):
 	sequences.append(l)
 
 
-
-
 for code, sequence in zip(codes, sequences):
 	print(f"{code}: {sequence}")
-#
-# print(score)
-# print(dirpad.count_moves("<A^A>^^AvvvA"))
-# print(dirpad.count_moves("<A^A^>^AvvvA"))
-# print(numpad.encode("029A"))
-# print(len(dirpad.encode("<A^A>^^AvvvA")[0])) # 28 - 16
-# print(len(dirpad.encode("<A^A^>^AvvvA")[0])) # 30 - 18
-# print(len(dirpad.encode("<A^A^^>AvvvA")[0]))
+
+	

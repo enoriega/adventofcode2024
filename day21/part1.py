@@ -3,7 +3,7 @@ import itertools as it
 from collections import deque, defaultdict
 
 # Read the input
-with open("day21/input.txt") as f:
+with open("day21/test.txt") as f:
 	codes = [l.strip() for l in f]
 
 
