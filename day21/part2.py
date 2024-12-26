@@ -5,7 +5,7 @@ from functools import lru_cache
 from tqdm import tqdm
 
 # Read the input
-with open("day21/test.txt") as f:
+with open("day21/input.txt") as f:
 	codes = [l.strip() for l in f]	
 
 # Class to hold the same logic that generalizes to any keypad
@@ -38,7 +38,7 @@ class KeyPad:
 				chosen = None
 				while segs:
 					seg = segs.pop()
-					moves = scorer.count_moves(seg)
+					moves = scorer.count_moves(seg+['A'])
 					if moves < min_moves:
 						min_moves = moves
 						chosen = seg
@@ -49,8 +49,6 @@ class KeyPad:
 			for d, segs in dsts.items():
 				if segs:
 					self._segments[s][d] = segs[0]
-
-		x = 0
 	
 	def decode(self, input:str) -> str:
 		""" Decodes a series of steps and
@@ -157,8 +155,11 @@ class KeyPad:
 	def count_moves(self, seq:str) -> int:
 		""" Computes the total number of moves """
 		seq = list(seq)
-		seq.append('A')
-		return sum(self._distances[s][d] for s, d in zip(seq, seq[1:]))
+		# seq.append('A')
+		l = 0
+		for s, d in zip(seq, seq[1:]):
+			l += self._distances[s][d]
+		return l
 
 arrows = " ^A\n<v>"
 dirpad = KeyPad(keys=arrows)
@@ -167,53 +168,94 @@ nums = "789\n456\n123\n 0A"
 numpad = KeyPad(keys=nums, scorer=dirpad)
 	
 
-# def optimize(code, steps):
-# 	ret = code
-# 	for step in range(steps):
-# 		if step == 0:
-# 			ret = numpad.encode(ret)
-# 		else:
-# 			ret = dirpad.encode(ret)
-
-# 	return len(ret)
-
 def optimize(code, steps):
 	seq = numpad.encode(code)
-	seq = efficient(seq, steps-1)
-	return len(seq)
-
-mem = {}
-def efficient(seq, steps):
-	# for _ in range(steps):
-	# 	seq = dirpad.encode(seq)
-	# return seq
-	key = ''.join(seq), steps
-	if key in mem:
-		return mem[key]
-	
-	if steps == 0:
-		ret = seq
-	else:
-		# Split the sequence in blocks that end in A
-		blocks = []
-		block = []
-		for c in seq:
-			block.append(c)
-			if c == 'A':
-				blocks.append(block)
-				block = []
-		if block:
+	l=0
+	# l = numpad.count_moves("A"+code)
+	blocks = []
+	block = []
+	for c in seq:
+		block.append(c)
+		if c == 'A':
 			blocks.append(block)
+			block = []
+			
+	if block:
+		blocks.append(block)
+	for block in blocks:
+		l += efficient(block, steps-1)
+	return l
 
-		# Recursive call
-		ret = []
-		for block in blocks:
-			encoded = dirpad.encode(block)
-			ret.extend(efficient(encoded, steps-1))
+# Use dp to pre-compute the distances
+possible_segments = set()
+for segs in it.chain(dirpad._segments.values(), numpad._segments.values()):
+	for seg in segs.values():
+		possible_segments.add(''.join(seg))
 
-	mem[key] = ret
-	return ret
+segment_distances = {}
+for step in range(1, 26):
+	for segment in possible_segments:
+		segment += 'A'
+		if step == 1:
+			score = len(dirpad.encode(segment))
+		else:
+			encoded = dirpad.encode(segment)
+			block = []
+			score = 0
+			for c in encoded:
+				block.append(c)
+				if c == 'A':
+					score += segment_distances[(''.join(block), step-1)]
+					block = []
+			x=0
+					
+		segment_distances[(segment, step)] = score
 
+def efficient(seq, steps):
+
+	# Split the sequence in blocks that end in A
+	blocks = []
+	block = []
+	for c in seq:
+		block.append(c)
+		if c == 'A':
+			blocks.append(block)
+			block = []
+			
+	if block:
+		blocks.append(block)
+
+	# Use the lookup table
+	score = 0
+	for block in blocks:
+		score += segment_distances[(''.join(block), steps)]
+
+	return score
+
+def recursive(seq, steps):
+
+	encoded = dirpad.encode(seq)
+	if steps == 0:
+		return len(encoded)
+	# Split the sequence in blocks that end in A
+	blocks = []
+	block = []
+	for c in encoded:
+		block.append(c)
+		if c == 'A':
+			blocks.append(block)
+			block = []
+			
+	if block:
+		blocks.append(block)
+
+	# Use the lookup table
+	score = 0
+	for block in blocks:
+		score += recursive(''.join(block), steps-1)
+
+	return score
+# print(numpad.count_moves("A029"))
 
 score = 0
 sequences = []
